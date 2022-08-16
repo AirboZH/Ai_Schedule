@@ -2,6 +2,10 @@
 小爱课程表 解析课程表数据 天津理工大学-师生服务
 华信的同学需要自己改一下课程时间
 
+## 运行
+
+运行 `npm run test` 以运行
+
 ## 数据解析格式：
 
 <table><thead><tr><th>参数名</th><th>术语解释</th><th>是否必填</th><th align="left">说明</th></tr></thead><tbody><tr><td>courseInfo</td><td>Array[{},{}</td><td>是</td><td align="left">课程表详细信息: <br>name: String 课程 <br>position: Sting 教室<br> teacher:String 教师<br> weeks:Array(非空)第几周 <br> day:Sring 星期几 <br>section:[] 第几节</td></tr><tr><td>sectionTimes</td><td>Array[{},{}]</td><td>否</td><td align="left">课时信息:<br> section: Number 第几节<br> startTime: String 开始时间<br> endTime: String 结束时间</td></tr></tbody></table>
