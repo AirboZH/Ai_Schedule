@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.12"
+  },
+  "scripts": {
+    "test": "node test"
+  },
+  "type": "module"
+}

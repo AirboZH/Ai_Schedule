@@ -1,45 +1,93 @@
-var coursetInfo = []
-
-var trd = document.getElementsByTagName('tr')
-for (var w = 1; w <= 11; w += 2) {
-    var trw = trd[w].innerHTML
-    var tr = document.createElement('tr')
-    tr.innerHTML = trw
-    tr = tr.children
-    for (var q = 2; q < 9; q++) {
-        var tdi = tr.item(q)
-        var dat = q - 1
-        console.log('week:', dat)
-        var text = tdi.innerHTML//.trim()
-        console.log(text)
-        if (text != "&nbsp;") {
-            var parse = text.split('&nbsp;')
-            console.log(parse)
-            var classname = parse[1].split('[')[0]
-            var wtw = parse[3].split('\n\t')[0].split('<br>')
-            var where = wtw [2]
-            var teachername = wtw[1]
-            var week = week_parse(parse[2])
-            var classinfo = {
-                "name": classname,
-                "position": where,
-                "teacher": teachername,
-                "week": week,
-                "dat": dat,
-                "Sections": [
-                    { "Section": 2 }
-                ]
+import cheerio from 'cheerio'
+export function scheduleHtmlParser(html) {
+    let ch = cheerio.load(html, { decodeEntities: false });
+    let coursetInfo = [];
+    let trd = ch("tr");
+    let arr = Array(12).fill(2);
+    for (let day = 1; day <= 7; day++) {
+      let section = 1;
+      while (section <= 12) {
+        let course = ch(trd[section])
+          .find(`td`)
+          .eq(arr[section]++);
+        section += parseInt(course.attr("rowspan"));
+        let courseHTML = course.html();
+        if (courseHTML != "&nbsp;" && courseHTML != null) {
+          let courseArray = courseHTML.trim().split("<hr>");
+          for (let oneCourse of courseArray) {
+            course = oneCourse.split("&nbsp;");
+            let coursename = course[0].search(/div/) == 1 ? course[1] : course[0];
+            let info = course[course.length - 1].split("<br>");
+            let week = [];
+            let begin, end;
+            if (course[course.length - 2].split("周")[1] == " ") {
+              // console.log(course);
+              let temp = course[course.length - 2].split("周")[0].split("-");
+              begin = parseInt(temp[0]);
+              end = parseInt(temp[1]);
+              for (let n = begin; n <= end; n++) {
+                week.push(n);
+              }
+            } else if (course[course.length - 2].split("周")[1][0] == ",") {
+              for (let weekinfo of course[course.length - 2].split(",")) {
+                if (weekinfo.split("周")[1][1] == "单") {
+                  let temp = weekinfo.split("周")[0].split("-");
+                  begin = temp[0] % 2 == 0 ? parseInt(temp[0]) + 1 : parseInt(temp[0]);
+                  end = temp[1] % 2 == 0 ? parseInt(temp[1]) - 1 : parseInt(temp[1]);
+                  for (let n = begin; n <= end; n += 2) {
+                    week.push(n);
+                  }
+                } else if (weekinfo.split("周")[1][1] == "双") {
+                  let temp = weekinfo.split("周")[0].split("-");
+                  begin =
+                    temp[0] % 2 != 0 ? parseInt(temp[0]) + 1 : parseInt(temp[0]);
+                  end =
+                    temp[1] % 2 != 0 ? parseInt(temp[1]) - 1 : parseInt(temp[1]);
+                  for (let n = begin; n <= end; n += 2) {
+                    week.push(n);
+                  }
+                } else {
+                  let temp = weekinfo.split("周")[0].split("-");
+                  begin = parseInt(temp[0]);
+                  end = parseInt(temp[1]);
+                  for (let n = begin; n <= end; n++) {
+                    week.push(n);
+                  }
+                }
+              }
+            } else if (course[course.length - 2].split("周")[1][1] == "单") {
+              let temp = course[course.length - 2].split("周")[0].split("-");
+              begin = temp[0] % 2 == 0 ? parseInt(temp[0]) + 1 : parseInt(temp[0]);
+              end = temp[1] % 2 == 0 ? parseInt(temp[1]) - 1 : parseInt(temp[1]);
+              for (let n = begin; n <= end; n += 2) {
+                week.push(n);
+              }
+            } else if (course[course.length - 2].split("周")[1][1] == "双") {
+              let temp = course[course.length - 2].split("周")[0].split("-");
+              begin =
+                temp[0] % 2 != 0 ? parseInt(temp[0]) + 1 : parseInt(temp[0]);
+              end = temp[1] % 2 != 0 ? parseInt(temp[1]) - 1 : parseInt(temp[1]);
+              for (let n = begin; n <= end; n += 2) {
+                week.push(n);
+              }
             }
-            coursetInfo.push(classinfo)
+            let sections = [];
+            for (let n = parseInt(info[0].match(/\d+/g)[0]); n <= parseInt(info[0].match(/\d+/g)[1]); n++) {
+              sections.push(n);
+            }
+            var classinfo = {
+              name: coursename.trim().split("[")[0],
+              position: info[2].replace("\n\t\t\t  ", " ").trim(),
+              teacher: info[1],
+              weeks: week,
+              day: day,
+              sections: sections,
+            };
+            coursetInfo.push(classinfo);
+          }
         }
+      }
     }
-    
-}
-console.log(coursetInfo)
-function week_parse(weekin){
-    weekin = weekin.split(',')
-    for (let i = 0;i<weekin.length;i++){
-        weekin[i] = weekin[i].split('周')[0]
-    }
-    return weekin
-}
+    return coursetInfo;
+  }
+  
